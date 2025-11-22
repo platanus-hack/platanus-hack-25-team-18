@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 interface ChatBubbleProps {
@@ -7,7 +6,7 @@ interface ChatBubbleProps {
   timestamp?: string;
 }
 
-export const ChatBubble = memo(({ message, isUser, timestamp }: ChatBubbleProps) => {
+export const ChatBubble = ({ message, isUser, timestamp }: ChatBubbleProps) => {
   return (
     <div
       className={cn(
@@ -20,7 +19,7 @@ export const ChatBubble = memo(({ message, isUser, timestamp }: ChatBubbleProps)
           "rounded-2xl px-4 py-3",
           "transition-smooth",
           isUser
-            ? "bg-gradient-primary text-primary-foreground rounded-br-sm"
+            ? "bg-primary text-white rounded-br-sm shadow-lg border border-primary/40"
             : "bg-card border border-border text-foreground rounded-bl-sm shadow-card"
         )}
       >
@@ -31,6 +30,4 @@ export const ChatBubble = memo(({ message, isUser, timestamp }: ChatBubbleProps)
       )}
     </div>
   );
-});
-
-ChatBubble.displayName = 'ChatBubble';
+};

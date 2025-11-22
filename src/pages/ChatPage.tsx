@@ -1,6 +1,5 @@
-import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSwipeStore } from "@/stores/useSwipeStore";
+import { useAppContext } from "@/context/AppContext";
 import { getTopCandidate } from "@/data/mockData";
 import { ChatContainer } from "@/components/organisms/ChatContainer";
 
@@ -8,23 +7,17 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get("userId");
-  const answers = useSwipeStore((state) => state.answers);
-  const candidates = useSwipeStore((state) => state.candidates);
+  const { answers, candidates } = useAppContext();
 
   const topCandidate = getTopCandidate(answers, candidates);
 
-  useEffect(() => {
-    if (!topCandidate) {
-      navigate(`/?userId=${userId}`);
-    }
-  }, [topCandidate, navigate, userId]);
-
   if (!topCandidate) {
+    navigate(`/?userId=${userId}`);
     return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col liquid-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-white via-blue-50 to-red-50">
       {/* Header with blurred avatar */}
       <header className="w-full px-4 py-4 bg-card/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
@@ -49,6 +42,7 @@ const ChatPage = () => {
         <div className="flex-1 max-w-2xl w-full mx-auto flex flex-col">
           <ChatContainer
             candidateName={topCandidate.name}
+            candidateId={topCandidate.id}
             onReveal={() => navigate(`/reveal?userId=${userId}`)}
             onBack={() => navigate(`/swipe?userId=${userId}`)}
           />

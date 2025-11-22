@@ -18,24 +18,30 @@ export type Database = {
         Row: {
           choice: boolean
           created_at: string
+          embedding: string | null
           id: number
           opinion_id: number
+          text: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           choice: boolean
           created_at?: string
+          embedding?: string | null
           id?: number
           opinion_id: number
+          text?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           choice?: boolean
           created_at?: string
+          embedding?: string | null
           id?: number
           opinion_id?: number
+          text?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -252,7 +258,57 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_or_create_answer_embedding: {
+        Args: { answer_text_param: string; embedding_param: string }
+        Returns: string
+      }
+      match_candidates_by_topic: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          topic_ids: number[]
+        }
+        Returns: {
+          avg_similarity: number
+          candidate_id: number
+          candidate_name: string
+          candidate_party: string
+          opinion_count: number
+        }[]
+      }
+      match_documents_by_candidate: {
+        Args: {
+          candidate_filter_id: number
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          candidate_id: number
+          distance: number
+          id: number
+          text: string
+        }[]
+      }
+      match_opinions: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          topic_ids?: number[]
+        }
+        Returns: {
+          candidate_id: number
+          id: number
+          similarity: number
+          text: string
+          topic_id: number
+        }[]
+      }
+      recalculate_embedding_for_opinion: {
+        Args: { opinion_id_param: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
