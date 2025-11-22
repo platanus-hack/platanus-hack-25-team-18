@@ -72,7 +72,17 @@ export async function fetchOpinions(
     return [];
   }
 
-  return data
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  const opinions = data
     .filter((opinion) => opinion.Candidates && opinion.Topics)
     .map((opinion) => ({
       id: opinion.id,
@@ -108,6 +118,8 @@ export async function fetchOpinions(
           : (opinion.Topics as any).emoji || "",
       },
     }));
+
+  return shuffleArray(opinions);
 }
 
 /**
