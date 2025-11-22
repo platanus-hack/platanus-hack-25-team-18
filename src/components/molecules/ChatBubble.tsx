@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 interface ChatBubbleProps {
@@ -6,7 +7,7 @@ interface ChatBubbleProps {
   timestamp?: string;
 }
 
-export const ChatBubble = ({ message, isUser, timestamp }: ChatBubbleProps) => {
+export const ChatBubble = memo(({ message, isUser, timestamp }: ChatBubbleProps) => {
   return (
     <div
       className={cn(
@@ -30,4 +31,6 @@ export const ChatBubble = ({ message, isUser, timestamp }: ChatBubbleProps) => {
       )}
     </div>
   );
-};
+});
+
+ChatBubble.displayName = 'ChatBubble';

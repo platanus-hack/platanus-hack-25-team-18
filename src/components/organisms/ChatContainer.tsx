@@ -81,7 +81,7 @@ export const ChatContainer = ({
   return (
     <div className={cn("flex flex-col h-full", className)}>
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 ">
         {messages.map((message) => (
           <ChatBubble
             key={message.id}
@@ -94,7 +94,7 @@ export const ChatContainer = ({
       </div>
 
       {/* Action buttons */}
-      <div className="px-4 py-4 border-t border-border/50 space-y-3">
+      <div className="px-4 py-4 mt-44 border-t border-border/50 space-y-3 ">
         <Button
           onClick={onReveal}
           className="w-full gradient-primary text-primary-foreground font-semibold"
@@ -113,14 +113,16 @@ export const ChatContainer = ({
       </div>
 
       {/* Input area */}
-      <div className="px-4 py-4 border-t border-border/50 bg-card/80 backdrop-blur-lg">
+      <div className="px-4 py-6 mt-44 border-t border-border/50 bg-card/80 backdrop-blur-lg">
         <div className="flex gap-2">
           <Input
+            type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
             placeholder="Pregúntale lo que quieras..."
             className="flex-1"
+            autoComplete="off"
           />
           <Button
             onClick={handleSend}

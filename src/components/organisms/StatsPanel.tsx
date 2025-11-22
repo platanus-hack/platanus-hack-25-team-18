@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Candidate, UserAnswer, Idea, getCandidateScore, getTopicScores } from "@/data/mockData";
 import { ScoreMeter } from "@/components/atoms/ScoreMeter";
 import { TopicTag } from "@/components/atoms/TopicTag";
@@ -14,13 +15,32 @@ interface StatsPanelProps {
   onShare?: () => void;
 }
 
-export const StatsPanel = ({ candidate, answers, ideas, className, onShare }: StatsPanelProps) => {
-  const overallScore = getCandidateScore(candidate.id, answers);
-  const topicScores = getTopicScores(candidate.id, answers, ideas);
+export const StatsPanel = memo(({ candidate, answers, ideas, className, onShare }: StatsPanelProps) => {
+  // Memoize expensive calculations
+  const overallScore = useMemo(
+    () => getCandidateScore(candidate.id, answers),
+    [candidate.id, answers]
+  );
 
-  const sortedTopics = Object.entries(topicScores).sort(([, a], [, b]) => b - a);
-  const topMatches = sortedTopics.slice(0, 3);
-  const disagreements = sortedTopics.filter(([, score]) => score < 50);
+  const topicScores = useMemo(
+    () => getTopicScores(candidate.id, answers, ideas),
+    [candidate.id, answers, ideas]
+  );
+
+  const sortedTopics = useMemo(
+    () => Object.entries(topicScores).sort(([, a], [, b]) => b - a),
+    [topicScores]
+  );
+
+  const topMatches = useMemo(
+    () => sortedTopics.slice(0, 3),
+    [sortedTopics]
+  );
+
+  const disagreements = useMemo(
+    () => sortedTopics.filter(([, score]) => score < 50),
+    [sortedTopics]
+  );
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -105,4 +125,6 @@ export const StatsPanel = ({ candidate, answers, ideas, className, onShare }: St
       </Card>
     </div>
   );
-};
+});
+
+StatsPanel.displayName = 'StatsPanel';

@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAppContext } from "@/context/AppContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { fadeInUp, spring, createStaggerContainer } from "@/config/animations";
+import { useTopicsStore } from "@/stores/useTopicsStore";
+import { useSwipeStore } from "@/stores/useSwipeStore";
 
 interface Topic {
   id: number;
@@ -14,23 +13,27 @@ interface Topic {
 }
 
 const TopicsPage = () => {
-  const { topics: preloadedTopics, setTopics: setContextTopics, resetApp } = useAppContext();
-  const [topics, setTopics] = useState<Topic[]>(preloadedTopics);
+  const { topics: storeTopics, setTopics } = useTopicsStore();
+  const resetSwipe = useSwipeStore((state) => state.resetSwipe);
+
+  const [topics, setLocalTopics] = useState<Topic[]>(storeTopics);
   const [selectedTopics, setSelectedTopics] = useState<number[]>([]);
-  const [loading, setLoading] = useState(preloadedTopics.length === 0);
+  const [loading, setLoading] = useState(storeTopics.length === 0);
   const [submitting, setSubmitting] = useState(false);
   const [showTitle, setShowTitle] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Convert selectedTopics array to Set for O(1) lookup
+  const selectedTopicsSet = useMemo(() => new Set(selectedTopics), [selectedTopics]);
+
   useEffect(() => {
-    // Siempre recargar para asegurar que tenemos los emojis
     fetchTopics();
   }, []);
 
   useEffect(() => {
-    // Ocultar título después de 2 segundos
     const timer = setTimeout(() => {
       setShowTitle(false);
     }, 2000);
@@ -46,8 +49,10 @@ const TopicsPage = () => {
         .order("name");
 
       if (error) throw error;
-      setTopics(data || []);
-      setContextTopics(data || []);
+
+      const topicsData = data || [];
+      setLocalTopics(topicsData);
+      setTopics(topicsData);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -59,7 +64,8 @@ const TopicsPage = () => {
     }
   };
 
-  const toggleTopic = (topicId: number) => {
+  // Use useCallback to prevent function recreation on every render
+  const toggleTopic = useCallback((topicId: number) => {
     setSelectedTopics(prev => {
       if (prev.includes(topicId)) {
         return prev.filter(id => id !== topicId);
@@ -68,9 +74,9 @@ const TopicsPage = () => {
       }
       return prev;
     });
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (selectedTopics.length === 0) {
       toast({
         title: "Selecciona al menos un tema",
@@ -83,26 +89,22 @@ const TopicsPage = () => {
     setSubmitting(true);
 
     try {
-      // Verificar si ya existe una sesión
       const { data: { session } } = await supabase.auth.getSession();
 
       let userId: string;
 
       if (session?.user) {
-        // Ya existe un usuario en sesión, usar ese
         userId = session.user.id;
       } else {
-        // No hay sesión, crear usuario anónimo
         const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
 
         if (authError) throw authError;
-
         if (!authData.user?.id) throw new Error("No se pudo crear el usuario");
 
         userId = authData.user.id;
       }
 
-      // Guardar temas seleccionados
+      // Prepare user topics (memoized in useCallback deps)
       const userTopics = selectedTopics.map(topicId => ({
         user_id: userId,
         topic_id: topicId,
@@ -114,10 +116,8 @@ const TopicsPage = () => {
 
       if (error) throw error;
 
-      // Iniciar animación de transición
       setIsTransitioning(true);
 
-      // Navegar después de la animación
       setTimeout(() => {
         navigate(`/swipe?userId=${userId}`);
       }, 600);
@@ -130,7 +130,7 @@ const TopicsPage = () => {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [selectedTopics, toast, navigate]);
 
   if (loading) {
     return (
@@ -141,91 +141,61 @@ const TopicsPage = () => {
   }
 
   return (
-    <div className={`min-h-screen liquid-background p-6 ${isTransitioning ? 'animate-fade-out-up' : ''}`}>
-      <AnimatePresence mode="wait">
-        {showTitle ? (
-          <motion.div
-            key="title"
-            className="min-h-screen flex items-start justify-center pt-20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={spring.smooth}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground text-center">
-              Elige tus temas de interés
-            </h2>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={spring.smooth}
-          >
-            <motion.div
-              className="max-w-2xl mx-auto py-12 pb-32"
-              variants={createStaggerContainer(0.08, 0.1)}
-              initial="hidden"
-              animate="visible"
-            >
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {topics.map((topic, index) => (
-                  <motion.div
+    <div className={`min-h-screen liquid-background p-6 transition-all-smooth ${isTransitioning ? 'animate-fade-out-up' : ''}`}>
+      {showTitle ? (
+        <div
+          key="title"
+          className="min-h-screen flex items-start justify-center pt-20 animate-fade-in"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground text-center">
+            Elige tus temas de interés
+          </h2>
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          <div className="max-w-2xl mx-auto py-12 pb-32">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {topics.map((topic, index) => {
+                const isSelected = selectedTopicsSet.has(topic.id);
+
+                return (
+                  <div
                     key={topic.id}
-                    variants={fadeInUp}
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={spring.smooth}
                     className={`
-                      relative aspect-square rounded-2xl shadow-card hover:shadow-elevated
+                      stagger-item relative aspect-square rounded-2xl shadow-card
                       cursor-pointer flex flex-col items-center justify-center gap-3 p-4
-                      glass-effect
-                      ${selectedTopics.includes(topic.id) ? 'border-2 border-primary' : 'border border-border/50'}
+                      glass-effect hover-lift transition-all-smooth
+                      ${isSelected ? 'border-2 border-primary scale-105' : 'border border-border/50'}
                     `}
                     onClick={() => toggleTopic(topic.id)}
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <AnimatePresence>
-                      {selectedTopics.includes(topic.id) && (
-                        <motion.div
-                          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center"
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          exit={{ scale: 0, rotate: 180 }}
-                          transition={spring.bouncy}
-                        >
-                          <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <motion.div
-                      className="text-5xl md:text-6xl"
-                      animate={selectedTopics.includes(topic.id) ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.3 }}
+                    {isSelected && (
+                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center animate-scale-in">
+                        <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                    <div
+                      className={`text-5xl md:text-6xl transition-transform-smooth ${isSelected ? 'scale-110' : ''}`}
                     >
                       {topic.emoji || '📌'}
-                    </motion.div>
+                    </div>
                     <p className="font-semibold text-foreground text-sm md:text-base text-center">
                       {topic.name}
                     </p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Botón flotante */}
+      {/* Floating button */}
       {!showTitle && (
-        <motion.div
-          className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent pointer-events-none"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring.smooth, delay: 0.5 }}
-        >
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent pointer-events-none animate-fade-in-up">
           <div className="max-w-2xl mx-auto pointer-events-auto">
             <Button
               onClick={handleSubmit}
@@ -236,7 +206,7 @@ const TopicsPage = () => {
               {submitting ? "Guardando..." : "Comenzar a conocer candidatos"}
             </Button>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

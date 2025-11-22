@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppContext } from "@/context/AppContext";
+import { useSwipeStore } from "@/stores/useSwipeStore";
 import { getTopCandidate } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,8 @@ const MatchPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get("userId");
-  const { answers, candidates } = useAppContext();
+  const answers = useSwipeStore((state) => state.answers);
+  const candidates = useSwipeStore((state) => state.candidates);
   const { toast } = useToast();
 
   const [topics, setTopics] = useState<Topic[]>([]);

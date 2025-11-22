@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppContext } from "@/context/AppContext";
+import { useSwipeStore } from "@/stores/useSwipeStore";
 import { getTopCandidate } from "@/data/mockData";
 import { StatsPanel } from "@/components/organisms/StatsPanel";
 import { toast } from "sonner";
@@ -8,12 +9,20 @@ const RevealPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get("userId");
-  const { answers, resetApp, candidates, ideas } = useAppContext();
+  const answers = useSwipeStore((state) => state.answers);
+  const candidates = useSwipeStore((state) => state.candidates);
+  const ideas = useSwipeStore((state) => state.ideas);
+  const resetSwipe = useSwipeStore((state) => state.resetSwipe);
 
   const topCandidate = getTopCandidate(answers, candidates);
 
+  useEffect(() => {
+    if (!topCandidate) {
+      navigate(`/?userId=${userId}`);
+    }
+  }, [topCandidate, navigate, userId]);
+
   if (!topCandidate) {
-    navigate(`/?userId=${userId}`);
     return null;
   }
 
@@ -24,7 +33,7 @@ const RevealPage = () => {
   };
 
   const handleRestart = () => {
-    resetApp();
+    resetSwipe();
     navigate(`/?userId=${userId}`);
   };
 

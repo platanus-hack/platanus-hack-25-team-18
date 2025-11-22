@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppContext } from "@/context/AppContext";
+import { useSwipeStore } from "@/stores/useSwipeStore";
 import { getTopCandidate } from "@/data/mockData";
 import { ChatContainer } from "@/components/organisms/ChatContainer";
 
@@ -7,12 +8,18 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get("userId");
-  const { answers, candidates } = useAppContext();
+  const answers = useSwipeStore((state) => state.answers);
+  const candidates = useSwipeStore((state) => state.candidates);
 
   const topCandidate = getTopCandidate(answers, candidates);
 
+  useEffect(() => {
+    if (!topCandidate) {
+      navigate(`/?userId=${userId}`);
+    }
+  }, [topCandidate, navigate, userId]);
+
   if (!topCandidate) {
-    navigate(`/?userId=${userId}`);
     return null;
   }
 

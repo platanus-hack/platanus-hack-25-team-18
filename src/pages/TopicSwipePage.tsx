@@ -1,17 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppContext } from "@/context/AppContext";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useSwipeStore } from "@/stores/useSwipeStore";
+import { useTopicsStore } from "@/stores/useTopicsStore";
 import { SwipeCard } from "@/components/molecules/SwipeCard";
 import { ChevronDown } from "lucide-react";
 
 const TopicSwipePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const userId = searchParams.get("userId");
+  const urlUserId = searchParams.get("userId");
   const topicId = searchParams.get("topicId");
   const candidateId = searchParams.get("candidateId");
 
-  const { answerIdea, topics, ideas } = useAppContext();
+  const userId = useAuthStore((state) => state.userId);
+  const answerIdea = useSwipeStore((state) => state.answerIdea);
+  const topics = useTopicsStore((state) => state.topics);
+  const ideas = useSwipeStore((state) => state.ideas);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragX, setDragX] = useState(0);
@@ -114,11 +119,12 @@ const TopicSwipePage = () => {
     }
 
     // Swipe horizontal para responder
-    if (Math.abs(dragX) > threshold) {
+    const effectiveUserId = urlUserId || userId;
+    if (Math.abs(dragX) > threshold && effectiveUserId) {
       if (dragX > 0) {
-        answerIdea("agree");
+        answerIdea(effectiveUserId, "agree");
       } else {
-        answerIdea("disagree");
+        answerIdea(effectiveUserId, "disagree");
       }
       setCurrentIndex(prev => prev + 1);
     }

@@ -1,20 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import HoldButton from "@/components/atoms/HoldButton";
-import { useAppContext } from "@/context/AppContext";
+import { Button } from "@/components/ui/button";
+import { useTopicsStore } from "@/stores/useTopicsStore";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, useMotionValue, useTransform } from "framer-motion";
-import { spring } from "@/config/animations";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { setTopics } = useAppContext();
-  const [blurAmount, setBlurAmount] = useState(20);
-
-  // Motion values for smooth animations
-  const progress = useMotionValue(0);
-  const blur = useTransform(progress, [0, 100], [20, 0]);
-  const scale = useTransform(progress, [0, 100], [1.1, 1]);
+  const setTopics = useTopicsStore((state) => state.setTopics);
 
   useEffect(() => {
     // Precargar temas
@@ -36,51 +28,35 @@ const LandingPage = () => {
     loadTopics();
   }, [setTopics]);
 
-  const handleHoldProgress = (progressValue: number) => {
-    // Update motion value for smooth animation
-    progress.set(progressValue);
-    // Keep state for backward compatibility
-    const newBlur = 20 - (progressValue / 100) * 20;
-    setBlurAmount(newBlur);
-  };
-
-  const handleHoldComplete = () => {
-    setBlurAmount(0);
-    setTimeout(() => {
-      navigate("/topics");
-    }, 800);
+  const handleStart = () => {
+    navigate("/topics");
   };
 
   return (
-    <motion.div
-      className="h-[100dvh] w-screen flex items-center justify-center overflow-hidden fixed inset-0"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={spring.smooth}
-    >
-      {/* Fondo con imagen de chile con blur */}
-      <motion.div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
-        style={{
-          backgroundImage: "url('/screen/chile.png')",
-          filter: blur,
-          scale: scale,
-        }}
-      />
+    <div className="h-[100dvh] w-screen flex flex-col items-center justify-center overflow-hidden fixed inset-0 liquid-background animate-fade-in">
+      {/* Contenido central */}
+      <div className="flex flex-col items-center justify-center relative z-10 gap-8 px-6">
+        {/* Título */}
+        <div className="text-center animate-fade-in-up">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl">
+            MiCandidatop
+          </h1>
+          <p className="text-xl md:text-2xl text-white/90 font-medium drop-shadow-lg">
+            Encuentra tu match político
+          </p>
+        </div>
 
-      {/* Contenido */}
-      <motion.div
-        className="flex items-center justify-center relative z-10"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ ...spring.bouncy, delay: 0.2 }}
-      >
-        <HoldButton
-          onComplete={handleHoldComplete}
-          onProgressChange={handleHoldProgress}
-        />
-      </motion.div>
-    </motion.div>
+        {/* Botón principal */}
+        <Button
+          onClick={handleStart}
+          size="lg"
+          className="text-xl px-12 py-8 shadow-glow hover:scale-105 transition-transform animate-scale-in"
+          style={{ animationDelay: '0.2s' }}
+        >
+          Descubre tu candidato
+        </Button>
+      </div>
+    </div>
   );
 };
 
