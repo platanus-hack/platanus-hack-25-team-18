@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSwipeStore } from "@/stores/useSwipeStore";
+import { useAppContext } from "@/context/AppContext";
 import { getTopCandidate } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,8 +18,7 @@ const MatchPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get("userId");
-  const answers = useSwipeStore((state) => state.answers);
-  const candidates = useSwipeStore((state) => state.candidates);
+  const { answers, candidates } = useAppContext();
   const { toast } = useToast();
 
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -88,7 +87,7 @@ const MatchPage = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center liquid-background">
+      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-blue-50 to-red-50">
         <p className="text-lg text-muted-foreground">Cargando...</p>
       </div>
     );
@@ -96,14 +95,29 @@ const MatchPage = () => {
 
   return (
     <motion.div
-      className="h-screen w-full fixed inset-0 overflow-hidden liquid-background"
+      className="h-screen w-full fixed inset-0 overflow-hidden bg-gradient-to-br from-white via-blue-50 to-red-50"
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={spring.smooth}
     >
       <div className="h-full w-full overflow-y-auto">
+        {/* Title */}
+        <motion.div
+          className="text-center pt-12 pb-4 px-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring.smooth, delay: 0.2 }}
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            ¡Hiciste match con un candidato!
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Conoce más sobre sus propuestas
+          </p>
+        </motion.div>
+
         {/* Sección Superior - Avatar con Blur */}
-        <div className="flex flex-col items-center justify-center pt-16 pb-8 px-6 mt-24">
+        <div className="flex flex-col items-center justify-center pt-8 pb-8 px-6">
           {/* Avatar con blur y burbuja de chat */}
           <div className="flex items-center gap-4 mb-6">
             <motion.div
@@ -111,7 +125,7 @@ const MatchPage = () => {
               variants={scaleIn}
               initial="hidden"
               animate="visible"
-              transition={{ ...spring.bouncy, delay: 0.2 }}
+              transition={{ ...spring.bouncy, delay: 0.3 }}
             >
               <img
                 src={topCandidate.avatarUrl}
@@ -125,34 +139,34 @@ const MatchPage = () => {
               className="flex flex-col gap-2"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ ...spring.smooth, delay: 0.4 }}
+              transition={{ ...spring.smooth, delay: 0.5 }}
             >
               {/* Burbuja de texto */}
               <motion.div
                 className="relative py-3 px-5 rounded-2xl bg-card border border-border text-foreground font-medium shadow-card"
                 initial={{ scale: 0, originX: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ ...spring.bouncy, delay: 0.5 }}
+                transition={{ ...spring.bouncy, delay: 0.6 }}
               >
                 Conozcámonos
                 {/* Triángulo de la burbuja */}
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-card"></div>
               </motion.div>
-
-              {/* Botón de chat */}
-              <motion.button
-                onClick={() => navigate(`/chat?userId=${userId}`)}
-                className="py-1.5 px-2 rounded-lg gradient-primary text-primary-foreground shadow-elevated hover:shadow-glow self-end text-lg"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ ...spring.bouncy, delay: 0.6 }}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                💬
-              </motion.button>
             </motion.div>
           </div>
+
+          {/* Big Chat Button */}
+          <motion.button
+            onClick={() => navigate(`/chat?userId=${userId}`)}
+            className="w-full max-w-md py-4 px-8 rounded-2xl bg-primary text-primary-foreground text-lg font-semibold shadow-elevated hover:shadow-glow transition-all"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ ...spring.bouncy, delay: 0.7 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            💬 Chatear con mi candidato
+          </motion.button>
         </div>
 
         {/* Sección Inferior - Cards de Temas */}
@@ -160,11 +174,14 @@ const MatchPage = () => {
           className="px-6 pb-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.8 }}
         >
+          <h2 className="text-xl font-semibold text-center text-foreground mb-6">
+            Explora por temas
+          </h2>
           <motion.div
             className="max-w-2xl mx-auto"
-            variants={createStaggerContainer(0.05, 0.8)}
+            variants={createStaggerContainer(0.05, 0.9)}
             initial="hidden"
             animate="visible"
           >

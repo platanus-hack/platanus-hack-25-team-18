@@ -1,22 +1,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useSwipeStore } from "@/stores/useSwipeStore";
-import { useTopicsStore } from "@/stores/useTopicsStore";
+import { useAppContext } from "@/context/AppContext";
 import { SwipeCard } from "@/components/molecules/SwipeCard";
 import { ChevronDown } from "lucide-react";
 
 const TopicSwipePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const urlUserId = searchParams.get("userId");
+  const userId = searchParams.get("userId");
   const topicId = searchParams.get("topicId");
   const candidateId = searchParams.get("candidateId");
 
-  const userId = useAuthStore((state) => state.userId);
-  const answerIdea = useSwipeStore((state) => state.answerIdea);
-  const topics = useTopicsStore((state) => state.topics);
-  const ideas = useSwipeStore((state) => state.ideas);
+  const { answerIdea, topics, ideas } = useAppContext();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragX, setDragX] = useState(0);
@@ -51,7 +46,7 @@ const TopicSwipePage = () => {
   // Si no hay topics cargados o no hay ideas para este tema
   if (!topicName || topicIdeas.length === 0) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center liquid-background">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white via-blue-50 to-red-50">
         <p className="text-lg text-muted-foreground mb-4">
           {!topicName ? "Cargando tema..." : "No hay preguntas para este tema"}
         </p>
@@ -119,12 +114,11 @@ const TopicSwipePage = () => {
     }
 
     // Swipe horizontal para responder
-    const effectiveUserId = urlUserId || userId;
-    if (Math.abs(dragX) > threshold && effectiveUserId) {
+    if (Math.abs(dragX) > threshold) {
       if (dragX > 0) {
-        answerIdea(effectiveUserId, "agree");
+        answerIdea("agree");
       } else {
-        answerIdea(effectiveUserId, "disagree");
+        answerIdea("disagree");
       }
       setCurrentIndex(prev => prev + 1);
     }
@@ -169,7 +163,7 @@ const TopicSwipePage = () => {
 
   return (
     <div
-      className="h-screen w-full fixed inset-0 overflow-hidden liquid-background flex flex-col"
+      className="h-screen w-full fixed inset-0 overflow-hidden bg-gradient-to-br from-white via-blue-50 to-red-50 flex flex-col"
       style={{
         transform: `translateY(${Math.max(0, dragY)}px)`,
         transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",

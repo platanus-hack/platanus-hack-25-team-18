@@ -1,6 +1,5 @@
-import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSwipeStore } from "@/stores/useSwipeStore";
+import { useAppContext } from "@/context/AppContext";
 import { getTopCandidate } from "@/data/mockData";
 import { StatsPanel } from "@/components/organisms/StatsPanel";
 import { toast } from "sonner";
@@ -9,20 +8,12 @@ const RevealPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get("userId");
-  const answers = useSwipeStore((state) => state.answers);
-  const candidates = useSwipeStore((state) => state.candidates);
-  const ideas = useSwipeStore((state) => state.ideas);
-  const resetSwipe = useSwipeStore((state) => state.resetSwipe);
+  const { answers, resetApp, candidates, ideas } = useAppContext();
 
   const topCandidate = getTopCandidate(answers, candidates);
 
-  useEffect(() => {
-    if (!topCandidate) {
-      navigate(`/?userId=${userId}`);
-    }
-  }, [topCandidate, navigate, userId]);
-
   if (!topCandidate) {
+    navigate(`/?userId=${userId}`);
     return null;
   }
 
@@ -33,12 +24,12 @@ const RevealPage = () => {
   };
 
   const handleRestart = () => {
-    resetSwipe();
+    resetApp();
     navigate(`/?userId=${userId}`);
   };
 
   return (
-    <div className="h-screen w-full fixed inset-0 overflow-hidden liquid-background">
+    <div className="h-screen w-full fixed inset-0 overflow-hidden bg-gradient-to-br from-white via-blue-50 to-red-50">
       <div className="h-full w-full overflow-y-auto pb-8">
         <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
           {/* Avatar section - Only image */}

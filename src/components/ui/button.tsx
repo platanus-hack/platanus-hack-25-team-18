@@ -51,7 +51,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         whileTap={buttonPress}
         whileHover={{ scale: 1.02 }}
         transition={spring.snappy}
-        {...props}
+        {...(props as any)}
       />
     );
   },
