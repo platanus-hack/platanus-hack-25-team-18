@@ -1,0 +1,21 @@
+# PDF Processing
+PyMuPDF==1.24.14
+
+# LLM APIs
+anthropic>=0.42.0
+google-generativeai>=0.8.0
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Progress Bars
+tqdm==4.67.1
+
+# Data Validation (versión compatible con Python 3.13)
+pydantic>=2.10.0
+
+# JSON Schema Validation
+jsonschema==4.23.0
+
+# Logging
+colorlog==6.9.0
