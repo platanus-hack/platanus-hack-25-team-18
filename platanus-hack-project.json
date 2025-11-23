@@ -1,4 +1,5 @@
 {
   "project-name": "MiCandidatop",
-  "project-description-spanish": "Aplicación que permite conocer las opiniones y posturas de los candidatos a presidente de Chile"
+  "project-description-spanish": "Aplicación que permite conocer las opiniones y posturas de los candidatos a presidente de Chile",
+  "deploy-url": "https://micandida.top"
 }
